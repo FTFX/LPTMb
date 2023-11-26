@@ -1,3 +1,18 @@
+global
+    user loki
+    log stdout format raw local0 info
+
+defaults
+    mode http
+    log global
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+
 userlist role_admin
     user $HAPROXY_BASIC_AUTH_ADMIN_USERNAME insecure-password $HAPROXY_BASIC_AUTH_ADMIN_PASSWORD
 
@@ -5,10 +20,9 @@ userlist role_ingest
     user $HAPROXY_BASIC_AUTH_INGEST_USERNAME insecure-password $HAPROXY_BASIC_AUTH_INGEST_PASSWORD
 
 frontend loki
-    bind :8080
+    bind *:8080
     use_backend ingest if { path /loki/api/v1/push }
-    use_backend admin
-    default_backend ingest
+    default_backend admin
 
 backend admin
     http-request auth unless { http_auth(role_admin) }
