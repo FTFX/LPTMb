@@ -1,0 +1,19 @@
+userlist role_admin
+    user $HAPROXY_BASIC_AUTH_ADMIN_USERNAME insecure-password $HAPROXY_BASIC_AUTH_ADMIN_PASSWORD
+
+userlist role_ingest
+    user $HAPROXY_BASIC_AUTH_INGEST_USERNAME insecure-password $HAPROXY_BASIC_AUTH_INGEST_PASSWORD
+
+frontend loki
+    bind :8080
+    use_backend ingest if { path /loki/api/v1/push }
+    use_backend admin
+    default_backend ingest
+
+backend admin
+    http-request auth unless { http_auth(role_admin) }
+    server app 127.0.0.1:3100
+
+backend ingest
+    http-request auth unless { http_auth(role_ingest) }
+    server app 127.0.0.1:3100
